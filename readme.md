@@ -53,7 +53,7 @@
 
 等待程序执行结束，如果看到`Process finished with exit code 0`，说明执行成功，可以去查看效果
 
-![image-20231030173704294](C:\Users\Lu\AppData\Roaming\Typora\typora-user-images\image-20231030173704294.png)
+![result](./image/6.png)
 
 ### Q&A
 
