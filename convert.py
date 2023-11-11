@@ -1,47 +1,50 @@
 import os
 import random
 
-import win32com.client as win32
+# package python-docx
+from docx import Document
+from docx.shared import Pt  # For setting font size
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 
-# 修改到当前目录
+# get word_dir
 work_dir = os.path.dirname(os.path.abspath(__file__))
 # print(work_dir)
 
-# 创建Word应用程序实例
-word = win32.gencache.EnsureDispatch('Word.Application')
+# define doc variables
+source_doc = Document(work_dir + '/source.docx')
+target_doc = Document(work_dir + '/template.docx')
 
-# 打开源文档
-source_doc = word.Documents.Open(work_dir + '/source.docx')
+# style control
+font_name = [u'对你不止是喜欢', u'你是我的可爱宝贝', u'品如手写体']
+font_size = [16, 15, 16, 17, 16]
 
-# 选择要复制的文本
-source_doc.Content.WholeStory()
-source_doc.Content.Copy()
-
-# 打开目标文档
-target_doc = word.Documents.Open(work_dir + '/template.docx')
-
-# 将复制的文本粘贴到目标文档（仅文字）
-target_doc.Content.PasteSpecial(DataType=win32.constants.wdPasteText)
-
-# 关闭源文档
-source_doc.Close()
-
-# 设置要应用的新字体
-font_name = '对你不止是喜欢'
-font_size = [14, 15, 16, 17, 18]
-
-# 遍历文档中的所有段落，设置字体
-for paragraph in target_doc.Paragraphs:
-    for run in paragraph.Range.Words:
-        run.Font.Name = font_name
-        run.Font.Size = font_size[random.randint(0, 4)]
-
+# pasting words into target_docx
+for para in source_doc.paragraphs:
+    # iterating every paragraph
+    new_para = target_doc.add_paragraph()
+    for char in para.text:
+        # iterating every character
+        run = new_para.add_run(char)
+        # 1. set font name(type)
+        font_type = random.randint(0, 2)
+        run.font.name = font_name[font_type]
+        run._element.rPr.rFonts.set(qn('w:eastAsia'), font_name[font_type])
+        # 2. set font size
+        run.font.size = Pt(font_size[random.randint(0, 4)])
+        # 3. set font italic
+        # run.font.italic = True if random.randint(0, 5) == 1 else False
+        # 4. set font bold
+        # run.font.bold = True if random.randint(0, 5) == 1 else False
+        # 5. set font spacing and vertical offset
+        spacing = OxmlElement('w:spacing')
+        vertical = OxmlElement('w:position')
+        spacing.set(qn('w:val'), str(random.randint(1, 15) - 7))
+        vertical.set(qn('w:val'), str(random.randint(1, 5) - 2))  # Adjust value for vertical offset
+        # Add the spacing element to the run properties
+        if run._element.rPr is None:
+            run._element.rPr = OxmlElement('w:rPr')
+        run._element.rPr.append(spacing)
+        run._element.rPr.append(vertical)
 # 保存目标文档
-target_doc.Save()
-
-
-# 关闭目标文档
-target_doc.Close()
-
-# 关闭Word应用程序
-word.Quit()
+target_doc.save(work_dir + '/template.docx')
